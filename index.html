@@ -1573,24 +1573,73 @@ const orientedTask = {
 };
 
 // =========================================================================
-// SEKCE PRO ODESLÁNÍ DAT PO DOKONČENÍ EXPERIMENTU
+// PŘEPRACOVANÁ FUNKCE PRO ODESLÁNÍ DAT VE WIDE FORMÁTU
 // =========================================================================
 
-// Funkce, která odešle data přes Fetch API
+// GLOBÁLNÍ ČÍTAČ PRO IDENTIFIKACI RESPONDENTŮ (lze ho uložit i v LocalStorage)
+// Pro jednoduchost ho necháme jako časové razítko.
+let respondentCounter = 0; 
+
 function saveDataToSheetDB() {
-    // 1. Získáme všechna data, která jsPsych shromáždil, ve formátu JSON
-    // Vytáhneme POUZE sloupce, které potřebujeme, abychom Tabulku nezahltili.
-    const allData = jsPsych.data.get().ignore(['internal_node_id', 'stimulus', 'button_choices']).json();
+    // 1. Nastavení proměnných
+    const sheetDB_URL = 'o	https://sheetdb.io/api/v1/dknmz514rz0f5'; // ZMĚŇTE NA VAŠI URL!
+    const allData = jsPsych.data.get().values();
     
-    // SheetDB očekává JSON objekt s klíčem 'data', kde hodnota je pole objektů
-    const dataToSend = {
-        data: JSON.parse(allData)
+    // Generování ID (např. "ID_1667678400000" pro dnešní datum/čas)
+    const subjectID = 'ID_' + Date.now(); 
+    
+    // Jediný objekt pro finální uložení (jeden řádek v tabulce)
+    const finalData = {
+        respondent_id: subjectID,
+        time_total_ms: jsPsych.data.get().select('time_elapsed').values().at(-1) || 'N/A'
     };
 
-    // ZMĚŇTE TUTO HODNOTU NA VAŠI SKUTEČNOU SheetDB API URL
-    const sheetDB_URL = 'https://sheetdb.io/api/v1/dknmz514rz0f5'; 
+    // Index pro pojmenování úkolů (task1, task2, ...)
+    let taskIndex = 1; 
 
-    // Odeslání dat pomocí asynchronního fetch požadavku (POST)
+    // 2. Extrakce a formátování dat do WIDE FORMATU
+    allData.forEach(trial => {
+        // --- A. Demografické údaje ---
+        // Demografické údaje ukládáme jen jednou
+        if (trial.task_name === 'demography' && !finalData.study_field) {
+            finalData.study_field = trial.study_field;
+        }
+        if (trial.task_name === 'demography_year' && !finalData.study_year) {
+            finalData.study_year = trial.study_year;
+        }
+        
+        // --- B. Úkoly (Sledování pohybu, odpověď a Likertovy otázky) ---
+        // Předpokládáme, že úkoly mají unikátní data: yellow_path
+        if (trial.yellow_path) { 
+            const prefix = `task${taskIndex}_`;
+            
+            finalData[prefix + 'rt'] = trial.rt;
+            finalData[prefix + 'path'] = JSON.stringify(trial.yellow_path); // Sledovaná cesta
+            finalData[prefix + 'answer'] = trial.answer; // Konečná volba (slovní odpověď)
+            
+            // Likertovy otázky (zde se fixuje problém s chybějícími daty)
+            finalData[prefix + 'L_time'] = trial.likert_time || 'N/A'; 
+            finalData[prefix + 'L_diff'] = trial.likert_difficulty || 'N/A';
+            finalData[prefix + 'L_cert'] = trial.likert_certainty || 'N/A';
+
+            taskIndex++;
+        }
+        
+        // --- C. Finální slovní odpověď (Slovní reflexe) ---
+        // Váš kód možná obsahuje trial, kde je uložena delší slovní odpověď.
+        // Předpokládejme, že je uložena pod klíčem 'text_response' a 'task_name: "final_reflection"'
+        if (trial.task_name === 'final_reflection' && trial.text_response) {
+            finalData.final_reflection = trial.text_response;
+        }
+    });
+
+    // 3. Odeslání jediného řádku dat do SheetDB
+    const dataToSend = {
+        data: [finalData] // Odesíláme pole obsahující JEDEN objekt
+    };
+    
+    // ... (zbytek fetch kódu pro odeslání dat, kde se zobrazuje poděkování) ...
+
     fetch(sheetDB_URL, {
         method: 'POST',
         headers: {
@@ -1599,29 +1648,34 @@ function saveDataToSheetDB() {
         body: JSON.stringify(dataToSend)
     })
     .then(response => {
+        // Kontrola, zda odeslání proběhlo úspěšně
         if (response.ok) {
-            console.log('✅ Data byla úspěšně odeslána.');
-            // Zobrazíme finální děkovnou stránku
             document.querySelector('.jspsych-content').innerHTML = `
                 <div style="text-align: center; max-width: 600px; margin: 40px auto;">
                     <h2>Děkujeme za Váš čas!</h2>
-                    <p>Dotazník byl úspěšně dokončen. Můžete zavřít toto okno.</p>
+                    <p style="color: green; font-weight: bold;">✅ Data byla úspěšně uložena (ID: ${subjectID}).</p>
+                    <p>Můžete zavřít toto okno.</p>
                 </div>
             `;
+            console.log('✅ Data byla úspěšně odeslána do Google Sheets (Wide Format).');
         } else {
-            console.error('❌ CHYBA při odesílání dat do SheetDB. Status:', response.status);
-            // Zobrazíme chybovou zprávu, ale děkovnou stránku také
-            document.querySelector('.jspsych-content').innerHTML = `
+            // ... (chybová hláška při selhání serveru/SheetDB) ...
+             document.querySelector('.jspsych-content').innerHTML = `
                 <div style="text-align: center; max-width: 600px; margin: 40px auto; color: red;">
-                    <h2>Děkujeme – Experiment dokončen s chybou uložení!</h2>
-                    <p>Došlo k chybě při ukládání dat. Prosím, kontaktujte experimentátora. (Kód chyby: ${response.status})</p>
+                    <h2>Děkujeme – Experiment dokončen, ale s chybou uložení!</h2>
+                    <p>Došlo k chybě při ukládání dat (Chyba serveru). ID: ${subjectID}. Prosím, kontaktujte experimentátora.</p>
                 </div>
             `;
         }
     })
     .catch(error => {
-        console.error('❌ CHYBA sítě při odesílání dat:', error);
-        // Podobně zobrazíme chybovou zprávu
+        // ... (chybová hláška při selhání sítě) ...
+         document.querySelector('.jspsych-content').innerHTML = `
+            <div style="text-align: center; max-width: 600px; margin: 40px auto; color: red;">
+                <h2>Děkujeme – Experiment dokončen, ale s chybou uložení!</h2>
+                <p>Došlo k chybě při ukládání dat (Chyba sítě). ID: ${subjectID}. Prosím, kontaktujte experimentátora.</p>
+            </div>
+        `;
     });
 }
 
@@ -1630,4 +1684,5 @@ function saveDataToSheetDB() {
   </script>
 </body>
 </html>
+
 
