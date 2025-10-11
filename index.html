@@ -1572,9 +1572,62 @@ const orientedTask = {
   }
 };
 
+// =========================================================================
+// SEKCE PRO ODESLÁNÍ DAT PO DOKONČENÍ EXPERIMENTU
+// =========================================================================
+
+// Funkce, která odešle data přes Fetch API
+function saveDataToSheetDB() {
+    // 1. Získáme všechna data, která jsPsych shromáždil, ve formátu JSON
+    // Vytáhneme POUZE sloupce, které potřebujeme, abychom Tabulku nezahltili.
+    const allData = jsPsych.data.get().ignore(['internal_node_id', 'stimulus', 'button_choices']).json();
+    
+    // SheetDB očekává JSON objekt s klíčem 'data', kde hodnota je pole objektů
+    const dataToSend = {
+        data: JSON.parse(allData)
+    };
+
+    // ZMĚŇTE TUTO HODNOTU NA VAŠI SKUTEČNOU SheetDB API URL
+    const sheetDB_URL = 'https://sheetdb.io/api/v1/dknmz514rz0f5'; 
+
+    // Odeslání dat pomocí asynchronního fetch požadavku (POST)
+    fetch(sheetDB_URL, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(dataToSend)
+    })
+    .then(response => {
+        if (response.ok) {
+            console.log('✅ Data byla úspěšně odeslána.');
+            // Zobrazíme finální děkovnou stránku
+            document.querySelector('.jspsych-content').innerHTML = `
+                <div style="text-align: center; max-width: 600px; margin: 40px auto;">
+                    <h2>Děkujeme za Váš čas!</h2>
+                    <p>Dotazník byl úspěšně dokončen. Můžete zavřít toto okno.</p>
+                </div>
+            `;
+        } else {
+            console.error('❌ CHYBA při odesílání dat do SheetDB. Status:', response.status);
+            // Zobrazíme chybovou zprávu, ale děkovnou stránku také
+            document.querySelector('.jspsych-content').innerHTML = `
+                <div style="text-align: center; max-width: 600px; margin: 40px auto; color: red;">
+                    <h2>Děkujeme – Experiment dokončen s chybou uložení!</h2>
+                    <p>Došlo k chybě při ukládání dat. Prosím, kontaktujte experimentátora. (Kód chyby: ${response.status})</p>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('❌ CHYBA sítě při odesílání dat:', error);
+        // Podobně zobrazíme chybovou zprávu
+    });
+}
 
 
-    jsPsych.run([informed_consent, demography_study_field, demography_study_year, demography_study_form, houseTask, connectTask, coloringTask, eulerTask, hamiltonTask, orientedTask]); //Timeline - pořadí úloh
+    jsPsych.run([informed_consent, demography_study_field, demography_study_year, demography_study_form, houseTask, connectTask, coloringTask, eulerTask, hamiltonTask, orientedTask]).then(saveDataToSheetDB); //Timeline - pořadí úloh
   </script>
 </body>
 </html>
+
