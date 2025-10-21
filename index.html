@@ -1519,15 +1519,18 @@ function saveDataToSheetDB() {
 /////////////////////////////////////////////////////////////////////////
 // Funkce pro transformaci dat do "širokého" formátu pro SheetDB/Google Sheets
 function processDataForWideFormat() {
-    // 1. Získání všech dat (jsPsych data)
-    const allData = jsPsych.data.get().values();
+    // 1. Získání všech dat (jsPsych data) - DEFINOVÁNO POUZE JEDNOU
+    const allData = jsPsych.data.get().values(); 
 
     // 2. Extrahování a uspořádání klíčových proměnných
-    let wideData = {};
-	const allData = jsPsych.data.get().values();
-	const subjectID = allData[0] ? allData[0].subjectID : 'N/A';
-	wideData.subjectID = subjectID;
+    let wideData = {}; 
 
+    // 🚨 ZAČÁTEK OPRAVY ID: ZAJIŠTĚNÍ POZICE A SPRÁVNÉHO KLÍČE 🚨
+    // ID bereme z prvního trialu, kam jsme ho uložili pod klíčem 'subjectID'
+    const subjectID = allData[0] ? allData[0].subjectID : 'N/A';
+    // Vkládáme ID jako PRVNÍ KLÍČ, aby bylo v Google Tabulce ve sloupci A
+    wideData.subjectID = subjectID;
+    
     // 3. Demografické údaje
     const demographyData = allData.find(d => d.task_name === 'demography');
     const demographyYearData = allData.find(d => d.task_name === 'demography_year');
@@ -1549,44 +1552,44 @@ function processDataForWideFormat() {
         { task: 'connectTask', prefix: 'uloha2' },
         { task: 'coloringTask', prefix: 'uloha3' },
         { task: 'eulerTask', prefix: 'uloha4' },
-        { task: 'pathfindingTask', prefix: 'uloha5' } // 'pathfindingTask' je v kódu pro hamiltonTask
+        { task: 'pathfindingTask', prefix: 'uloha5' }
     ];
 
     taskMappings.forEach(mapping => {
-        // Hledání dat pro úkoly je nyní robustnější: Hledáme podle názvu úkolu (task_name)
         let taskData = allData.find(d => d.task_name === mapping.task);
 
         if (taskData) {
-            
             // Likertovy škály (confidence, familiarity, strategy)
             wideData[`${mapping.prefix}_confidence`] = taskData.confidence;
             wideData[`${mapping.prefix}_familiarity`] = taskData.familiarity;
-            wideData[`${mapping.prefix}_strategy_code`] = taskData.strategy;
             
             // Specifická data k úlohám
             if (mapping.task === 'houseTask') {
                 wideData[`${mapping.prefix}_vertices_positions`] = taskData.vertices ? JSON.stringify(taskData.vertices.map(v => ({id: v.id, x: v.x, y: v.y}))) : '[]';
             } else if (mapping.task === 'connectTask') {
                 wideData[`${mapping.prefix}_created_edges`] = taskData.created_edges ? JSON.stringify(taskData.created_edges) : '[]';
-                wideData[`${mapping.prefix}_reset_count`] = taskData.reset_count; // Uloží reset pro úlohu 2
+                wideData[`${mapping.prefix}_reset_count`] = taskData.reset_count;
             } else if (mapping.task === 'coloringTask') {
                 wideData[`${mapping.prefix}_vertex_colors`] = taskData.vertex_colors ? JSON.stringify(taskData.vertex_colors) : '{}';
                 wideData[`${mapping.prefix}_min_colors_answer`] = taskData.chosen_answer;
             } else if (mapping.task === 'eulerTask') {
                 wideData[`${mapping.prefix}_added_edges`] = taskData.blue_edges ? JSON.stringify(taskData.blue_edges) : '[]';
-                wideData[`${mapping.prefix}_yellow_path_drawn`] = taskData.yellow_path_drawn; // task4_yellow (bool)
+                wideData[`${mapping.prefix}_yellow_path_drawn`] = taskData.yellow_path_drawn;
             } else if (mapping.task === 'pathfindingTask') {
                 wideData[`${mapping.prefix}_final_path`] = taskData.final_path ? JSON.stringify(taskData.final_path) : '[]';
-                wideData[`${mapping.prefix}_reset_count`] = taskData.reset_count; // Uloží reset pro úlohu 5
+                wideData[`${mapping.prefix}_reset_count`] = taskData.reset_count;
             }
             
             // Přidáme RT a čas startu/konce
             wideData[`${mapping.prefix}_rt`] = taskData.rt;
             wideData[`${mapping.prefix}_time_elapsed`] = taskData.time_elapsed; 
             
-            // Vložíme i text z textarea "Jiný důvod" (pokud je potřeba)
-            if (taskData.strategy_other_text) {
-                wideData[`${mapping.prefix}_strategy_other_text`] = taskData.strategy_other_text;
+            // Uložíme strategii (MK3) a text (pokud existuje)
+            if (taskData.strategy) {
+                wideData[`${mapping.prefix}_strategy_code`] = taskData.strategy;
+            }
+            if (taskData.strategy_other) {
+                wideData[`${mapping.prefix}_strategy_other_text`] = taskData.strategy_other;
             }
         }
     });
