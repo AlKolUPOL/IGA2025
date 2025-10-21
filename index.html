@@ -867,6 +867,10 @@ const connectTask = {
                 reset_count: resetCount, // task2_reset
                 ...likertAnswers // MK1, MK2, strategy, strategy_other
             });
+			const container = document.getElementById('connect-task-container');
+            if (container) {
+                container.remove();
+            }
             jsPsych.finishTrial();
         });
     }
@@ -899,9 +903,6 @@ const coloringTask = {
     `;
   },
   on_load: () => {
-	  document.querySelector('.jspsych-content').innerHTML = '';
-	  document.querySelector('.jspsych-content').innerHTML = document.getElementById('coloring-task-container').outerHTML;
-	  
     const svg = document.getElementById('color-graph');
     const svgNS = "http://www.w3.org/2000/svg";
 
@@ -1689,6 +1690,7 @@ jsPsych.run([informed_consent, demography_study_field, demography_study_year, de
 </script>
 </body>
 </html>
+
 
 
 
