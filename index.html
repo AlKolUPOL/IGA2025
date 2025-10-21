@@ -775,7 +775,18 @@ const connectTask = {
     
     on_load: () => {
         const svg = document.getElementById('connect-graph');
+        
+        // --- 🚨 KONTROLA PÁDU KÓDU (ZACHOVAT!) 🚨 ---
+        if (!svg) {
+            console.error("Chyba: Grafický kontejner (SVG) nebyl nalezen. Kód se zhroutil.");
+            return; 
+        }
+
         const svgNS = "http://www.w3.org/2000/svg";
+
+        // 🚨 ZDE MUSÍ BÝT DEKLAROVÁNY GLOBÁLNÍ PROMĚNNÉ PRO ON_LOAD 🚨
+        let edges = []; // vytvořené hrany
+        let selectedNode = null; // Stane se 'undefined' bez let!
 
         // Definice vrcholů a jejich požadovaného stupně (číslo uvnitř)
         const vertices = [
@@ -785,9 +796,6 @@ const connectTask = {
             { id: 3, x: 100, y: 310, degree: 3 },
             { id: 4, x: 400, y: 310, degree: 3 }
         ];
-
-        let edges = []; // vytvořené hrany, toto se ukládá jako solution
-        let selectedNode = null;
 
         // Funkce pro vykreslení grafu (včetně hrany, vrcholů a čísel)
         function drawGraph() {
@@ -815,7 +823,8 @@ const connectTask = {
                 circle.setAttribute('cx', node.x);
                 circle.setAttribute('cy', node.y);
                 circle.setAttribute('r', 20);
-                circle.setAttribute('fill', selectedNode === node.id ? 'lightblue' : 'white');
+                // ZDE BYLA CHYBA: selectedNode bylo nedefinované
+                circle.setAttribute('fill', selectedNode === node.id ? 'lightblue' : 'white'); 
                 circle.setAttribute('stroke', 'black');
                 circle.setAttribute('stroke-width', '2');
                 circle.style.cursor = 'pointer';
@@ -871,12 +880,10 @@ const connectTask = {
             jsPsych.data.addDataToLastTrial({
                 task_name: 'connectTask',
                 created_edges: edges, // task2_solution: Uloží vytvořené hrany
-                // reset_count se neukládá
-                ...likertAnswers // task2_MK1, task2_MK2, task2_MK3 (+ strategy_other)
+                ...likertAnswers // MK odpovědi
             });
             
             // 2. MANUÁLNÍ SMAZÁNÍ KONTEJNERU ÚLOHY 2
-            // Toto je klíčové, aby graf úlohy 2 zmizel před úlohou 3
             const container = document.getElementById('connect-task-container');
             if (container) {
                 container.remove();
@@ -887,7 +894,7 @@ const connectTask = {
         });
     }
 };
-
+	
 ///////////////////////////////////////////////////////////////// 3. úloha	
 const coloringTask = {
   type: jsPsychHtmlButtonResponse,
@@ -1700,6 +1707,7 @@ jsPsych.run([informed_consent, demography_study_field, demography_study_year, de
 </script>
 </body>
 </html>
+
 
 
 
