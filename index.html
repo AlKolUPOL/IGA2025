@@ -764,7 +764,6 @@ const connectTask = {
           <svg id="connect-graph" viewBox="0 0 480 360" preserveAspectRatio="xMidYMid meet" aria-label="Spojování vrcholů">
           </svg>
     	<div class="ui">
-            <button type="button" id="reset-btn">Resetovat úlohu</button>
             <span class="note">Klikněte na dva body pro spojení/odpojení.</span>
   	</div>
         </div>
@@ -787,8 +786,6 @@ const connectTask = {
     ];
 
     let edges = [];
-    let selectedNode = null;
-    let resetCount = 0; // NOVÉ: Počítadlo resetů
 
     function drawGraph() {
       svg.innerHTML = '';
@@ -850,13 +847,6 @@ const connectTask = {
       });
     }
 	  
-		// Reset button logic
-        document.getElementById('reset-btn').addEventListener('click', () => {
-            edges = [];
-            resetCount++; // NOVÉ: Inkrementace počítadla
-            drawGraph();
-        });	  
-	  
     drawGraph();
 
     // --- PŘIDÁNÍ LIKERTOVY SEKCE A LOGIKY ULOŽENÍ DAT ---
@@ -864,7 +854,6 @@ const connectTask = {
             jsPsych.data.addDataToLastTrial({
                 task_name: 'connectTask',
                 created_edges: edges, // task2_solution
-                reset_count: resetCount, // task2_reset
                 ...likertAnswers // MK1, MK2, strategy, strategy_other
             });
 			const container = document.getElementById('connect-task-container');
@@ -1688,6 +1677,7 @@ jsPsych.run([informed_consent, demography_study_field, demography_study_year, de
 </script>
 </body>
 </html>
+
 
 
 
