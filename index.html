@@ -876,9 +876,7 @@ const connectTask = {
     }
 };
 
-///////////////////////////////////////////////////////////////// 3. úloha
-const colors = ['red', 'green', 'blue', 'orange', 'purple'];
-	
+///////////////////////////////////////////////////////////////// 3. úloha	
 const coloringTask = {
   type: jsPsychHtmlButtonResponse,
   choices: [],
@@ -931,6 +929,7 @@ const coloringTask = {
     let selectedColor = null;
     let resetCount = 0; // Počítadlo resetů
     let chosenAnswer = null; // Odpověď na otázku počtu barev
+	const colors = ['red', 'green', 'blue', 'orange', 'purple'];
 	  
     // Vykreslení hran
     edges.forEach(([u,v]) => {
@@ -1689,6 +1688,7 @@ jsPsych.run([informed_consent, demography_study_field, demography_study_year, de
 </script>
 </body>
 </html>
+
 
 
 
