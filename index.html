@@ -776,25 +776,26 @@ const connectTask = {
     on_load: () => {
         const svg = document.getElementById('connect-graph');
         
-        // --- 🚨 KONTROLA PÁDU KÓDU (ZACHOVAT!) 🚨 ---
+        // --- KONTROLA PÁDU KÓDU ---
         if (!svg) {
-            console.error("Chyba: Grafický kontejner (SVG) nebyl nalezen. Kód se zhroutil.");
+            console.error("Chyba: Grafický kontejner (SVG) nebyl nalezen.");
             return; 
         }
 
         const svgNS = "http://www.w3.org/2000/svg";
 
-        // 🚨 ZDE MUSÍ BÝT DEKLAROVÁNY GLOBÁLNÍ PROMĚNNÉ PRO ON_LOAD 🚨
+        // 🚨 ZDE JE OPRAVA CHYBY selectedNode A VÁŠ PŮVODNÍ GRAF 🚨
         let edges = []; // vytvořené hrany
-        let selectedNode = null; // Stane se 'undefined' bez let!
+        let selectedNode = null; // Deklarace pro zamezení ReferenceError
 
-        // Definice vrcholů a jejich požadovaného stupně (číslo uvnitř)
+        // VÁŠ PŮVODNÍ GRAF:
         const vertices = [
-            { id: 0, x: 100, y: 50, degree: 3 }, 
-            { id: 1, x: 400, y: 50, degree: 3 }, 
-            { id: 2, x: 250, y: 180, degree: 4 },
-            { id: 3, x: 100, y: 310, degree: 3 },
-            { id: 4, x: 400, y: 310, degree: 3 }
+            { id: 0, x: 240, y: 60, degree: 2 }, 
+            { id: 1, x: 140, y: 120, degree: 4 }, 
+            { id: 2, x: 340, y: 120, degree: 2 },
+            { id: 3, x: 140, y: 240, degree: 4 },
+            { id: 4, x: 340, y: 240, degree: 2 },
+            { id: 5, x: 240, y: 300, degree: 4 }
         ];
 
         // Funkce pro vykreslení grafu (včetně hrany, vrcholů a čísel)
@@ -823,7 +824,6 @@ const connectTask = {
                 circle.setAttribute('cx', node.x);
                 circle.setAttribute('cy', node.y);
                 circle.setAttribute('r', 20);
-                // ZDE BYLA CHYBA: selectedNode bylo nedefinované
                 circle.setAttribute('fill', selectedNode === node.id ? 'lightblue' : 'white'); 
                 circle.setAttribute('stroke', 'black');
                 circle.setAttribute('stroke-width', '2');
@@ -879,11 +879,11 @@ const connectTask = {
             // 1. Uložíme data do jsPsych
             jsPsych.data.addDataToLastTrial({
                 task_name: 'connectTask',
-                created_edges: edges, // task2_solution: Uloží vytvořené hrany
+                created_edges: edges, // task2_solution
                 ...likertAnswers // MK odpovědi
             });
             
-            // 2. MANUÁLNÍ SMAZÁNÍ KONTEJNERU ÚLOHY 2
+            // 2. MANUÁLNÍ SMAZÁNÍ KONTEJNERU ÚLOHY 2 (Klíčové pro přechod na Úlohu 3)
             const container = document.getElementById('connect-task-container');
             if (container) {
                 container.remove();
@@ -1707,6 +1707,7 @@ jsPsych.run([informed_consent, demography_study_field, demography_study_year, de
 </script>
 </body>
 </html>
+
 
 
 
