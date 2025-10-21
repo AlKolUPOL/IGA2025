@@ -1665,18 +1665,22 @@ function sendDataToSheetDB() { //
     });
 }
 
+jsPsych.data.addProperties({
+    subjectID: subjectID
+});	
 	
 jsPsych.run([informed_consent, demography_study_field, demography_study_year, demography_study_form, houseTask, connectTask, coloringTask, eulerTask, hamiltonTask], {
     // on_finish je standardní JSPsych handler, který se spustí po dokončení experimentu
     on_finish: function() {
         // Voláme funkci BEZ jakýchkoliv argumentů
-        sendDataToSheetDB(); 
+        sendDataToSheetDB(subjectID); 
     }
 });
 
 </script>
 </body>
 </html>
+
 
 
 
