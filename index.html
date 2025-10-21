@@ -752,148 +752,120 @@ const demography_study_form = {
 	
 //////////////////////////////////////////////////////////////////// 2. úloha
 const connectTask = {
-    type: jsPsychHtmlButtonResponse,
-    choices: [], 
-    
-    // Stimulus (HTML) - BEZ TLAČÍTKA RESET
-    stimulus: () => {
-        return `
-            <div id="connect-task-container">
-                <div id="graphbox">
-                    <div class="prompt">
-                        <p><strong>2. úloha:</strong> Spojte kolečka čarami tak, aby počet čar, které jsou s kolečkem spojeny odpovídal číslu, které je uvnitř napsané. Klikněte na dva body, aby se vytvořila nebo smazala čára.</p>
-                    </div>
-                    <svg id="connect-graph" viewBox="0 0 480 360" preserveAspectRatio="xMidYMid meet" aria-label="Spojování vrcholů">
-                    </svg>
-                    <div class="ui">
-                        <span class="note">Klikněte na dva body pro spojení/odpojení.</span>
-                    </div>
-                </div>
-            </div>
-        `;
-    },
-    
-    on_load: () => {
+  type: jsPsychHtmlButtonResponse,
+  choices: [], 
+  stimulus: () => {
+    return `
+      <div id="connect-task-container">
+        <div id="graphbox">
+          <div class="prompt">
+            <p><strong>2. úloha:</strong> Spojte kolečka čarami tak, aby počet čar, které jsou s kolečkem spojeny odpovídal číslu, které je uvnitř napsané. Klikněte na dva body, aby se vytvořila nebo smazala čára.</p>
+          </div>
+          <svg id="connect-graph" viewBox="0 0 480 360" preserveAspectRatio="xMidYMid meet" aria-label="Spojování vrcholů">
+          </svg>
+    	<div class="ui">
+            <span class="note">Klikněte na dva body pro spojení/odpojení.</span>
+  			</div>
+        </div>
+      </div>
+    `;
+  },
+  on_load: () => {
         const svg = document.getElementById('connect-graph');
-        
-        // --- KONTROLA PÁDU KÓDU ---
-        if (!svg) {
-            console.error("Chyba: Grafický kontejner (SVG) nebyl nalezen.");
-            return; 
-        }
-
         const svgNS = "http://www.w3.org/2000/svg";
+	  
+    const nodes = [
+      {id: 1, label: "2", x: 120, y: 60},
+      {id: 2, label: "4", x: 240, y: 60},
+      {id: 3, label: "3", x: 360, y: 60},
+      {id: 4, label: "3", x: 120, y: 180},
+      {id: 5, label: "3", x: 240, y: 180},
+      {id: 6, label: "1", x: 360, y: 180},
+      {id: 7, label: "1", x: 120, y: 300},
+      {id: 8, label: "1", x: 240, y: 300}
+    ];
 
-        // 🚨 ZDE JE OPRAVA CHYBY selectedNode A VÁŠ PŮVODNÍ GRAF 🚨
-        let edges = []; // vytvořené hrany
-        let selectedNode = null; // Deklarace pro zamezení ReferenceError
+    let edges = [];
+    let selectedNode = null;
 
-        // VÁŠ PŮVODNÍ GRAF:
-        const vertices = [
-            { id: 0, x: 240, y: 60, degree: 2 }, 
-            { id: 1, x: 140, y: 120, degree: 4 }, 
-            { id: 2, x: 340, y: 120, degree: 2 },
-            { id: 3, x: 140, y: 240, degree: 4 },
-            { id: 4, x: 340, y: 240, degree: 2 },
-            { id: 5, x: 240, y: 300, degree: 4 }
-        ];
+    function drawGraph() {
+      svg.innerHTML = '';
 
-        // Funkce pro vykreslení grafu (včetně hrany, vrcholů a čísel)
-        function drawGraph() {
-            // Smazat vše kromě SVG (pro re-render)
-            Array.from(svg.children).forEach(el => el.remove());
+      // Hrany
+      edges.forEach(edge => {
+        const n1 = nodes.find(n => n.id === edge.from);
+        const n2 = nodes.find(n => n.id === edge.to);
+        const line = document.createElementNS(svgNS, "line");
+        line.setAttribute("x1", n1.x);
+        line.setAttribute("y1", n1.y);
+        line.setAttribute("x2", n2.x);
+        line.setAttribute("y2", n2.y);
+        line.setAttribute("stroke", "black");
+        line.setAttribute("stroke-width", "2");
+        svg.appendChild(line);
+      });
 
-            // Vykreslit existující hrany
-            edges.forEach(edge => {
-                const n1 = vertices.find(v => v.id === edge.from);
-                const n2 = vertices.find(v => v.id === edge.to);
-                const line = document.createElementNS(svgNS, 'line');
-                line.setAttribute('x1', n1.x);
-                line.setAttribute('y1', n1.y);
-                line.setAttribute('x2', n2.x);
-                line.setAttribute('y2', n2.y);
-                line.setAttribute('stroke', '#000000');
-                line.setAttribute('stroke-width', '2');
-                svg.appendChild(line);
-            });
+      // Vrcholy
+      nodes.forEach(node => {
+        const circle = document.createElementNS(svgNS, "circle");
+        circle.setAttribute("cx", node.x);
+        circle.setAttribute("cy", node.y);
+        circle.setAttribute("r", 18);
+        circle.setAttribute("fill", selectedNode === node.id ? "lightblue" : "white");
+        circle.setAttribute("stroke", "black");
+        circle.setAttribute("stroke-width", "2");
+        circle.style.cursor = "pointer";
 
-            // Vykreslit vrcholy a číselné štítky
-            vertices.forEach(node => {
-                // Kruh
-                const circle = document.createElementNS(svgNS, 'circle');
-                circle.setAttribute('cx', node.x);
-                circle.setAttribute('cy', node.y);
-                circle.setAttribute('r', 20);
-                circle.setAttribute('fill', selectedNode === node.id ? 'lightblue' : 'white'); 
-                circle.setAttribute('stroke', 'black');
-                circle.setAttribute('stroke-width', '2');
-                circle.style.cursor = 'pointer';
-                circle.setAttribute('data-node-id', node.id); 
-                svg.appendChild(circle);
+        circle.addEventListener("click", () => {
+          if (selectedNode === null) {
+            selectedNode = node.id;
+          } else {
+            if (selectedNode !== node.id) {
+              const existingIndex = edges.findIndex(e =>
+                (e.from === selectedNode && e.to === node.id) ||
+                (e.from === node.id && e.to === selectedNode)
+              );
+              if (existingIndex >= 0) {
+                edges.splice(existingIndex, 1); // smaž hranu
+              } else {
+                edges.push({from: selectedNode, to: node.id}); // přidej hranu
+              }
+            }
+            selectedNode = null;
+          }			
+          drawGraph();
+        });
 
-                // Číslo (stupeň)
-                const text = document.createElementNS(svgNS, 'text');
-                text.setAttribute('x', node.x);
-                text.setAttribute('y', node.y + 5); 
-                text.setAttribute('text-anchor', 'middle');
-                text.setAttribute('fill', 'black');
-                text.setAttribute('font-size', '14');
-                text.textContent = node.degree;
-                svg.appendChild(text);
+        const text = document.createElementNS(svgNS, "text");
+        text.setAttribute("x", node.x);
+        text.setAttribute("y", node.y + 5);
+        text.setAttribute("font-size", "16");
+        text.setAttribute("text-anchor", "middle");
+        text.textContent = node.label;
 
-                // Logika kliknutí
-                circle.addEventListener('click', () => {
-                    if (selectedNode === null) {
-                        // První klik
-                        selectedNode = node.id;
-                    } else {
-                        // Druhý klik
-                        if (selectedNode !== node.id) {
-                            const existsIndex = edges.findIndex(e => 
-                                (e.from === selectedNode && e.to === node.id) || 
-                                (e.from === node.id && e.to === selectedNode)
-                            );
-                            
-                            if (existsIndex >= 0) {
-                                // Hrana existuje -> Smazat (odpojit)
-                                edges.splice(existsIndex, 1);
-                            } else {
-                                // Hrana neexistuje -> Vytvořit (spojit)
-                                edges.push({ from: selectedNode, to: node.id });
-                            }
-                        }
-                        
-                        selectedNode = null; // Reset výběru
-                        drawGraph(); // Překreslit
-                    }
-                });
-            });
-        }
+        svg.appendChild(circle);
+        svg.appendChild(text);
+      });
+    }  
+	  
+    drawGraph();
 
-        // První vykreslení grafu
-        drawGraph();
-
-        // --- PŘIDÁNÍ LIKERTOVY SEKCE A LOGIKY ULOŽENÍ DAT ---
+    // --- PŘIDÁNÍ LIKERTOVY SEKCE A LOGIKY ULOŽENÍ DAT ---
         addLikertSection('connect-task-container', 'continue-btn-connect', (likertAnswers) => {
-            
-            // 1. Uložíme data do jsPsych
             jsPsych.data.addDataToLastTrial({
                 task_name: 'connectTask',
                 created_edges: edges, // task2_solution
-                ...likertAnswers // MK odpovědi
+                ...likertAnswers // MK1, MK2, strategy, strategy_other
             });
-            
-            // 2. MANUÁLNÍ SMAZÁNÍ KONTEJNERU ÚLOHY 2 (Klíčové pro přechod na Úlohu 3)
-            const container = document.getElementById('connect-task-container');
+			const container = document.getElementById('connect-task-container');
             if (container) {
                 container.remove();
             }
-
-            // 3. Ukončíme trial
             jsPsych.finishTrial();
         });
     }
 };
+
 	
 ///////////////////////////////////////////////////////////////// 3. úloha	
 const coloringTask = {
@@ -1707,6 +1679,7 @@ jsPsych.run([informed_consent, demography_study_field, demography_study_year, de
 </script>
 </body>
 </html>
+
 
 
 
