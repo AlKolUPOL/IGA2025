@@ -766,7 +766,7 @@ const connectTask = {
     	<div class="ui">
 
             <span class="note">Klikněte na dva body pro spojení/odpojení.</span>
-  	</div>
+  			</div>
         </div>
       </div>
     `;
@@ -1663,8 +1663,10 @@ function sendDataToSheetDB() { //
         `;
     });
 }
+
+//informed_consent, demography_study_field, demography_study_year, demography_study_form, houseTask, 
 	
-jsPsych.run([informed_consent, demography_study_field, demography_study_year, demography_study_form, houseTask, connectTask, coloringTask, eulerTask, hamiltonTask], {
+jsPsych.run([connectTask, coloringTask, eulerTask, hamiltonTask], {
     // on_finish je standardní JSPsych handler, který se spustí po dokončení experimentu
     on_finish: function() {
         // Voláme funkci BEZ jakýchkoliv argumentů
@@ -1675,6 +1677,7 @@ jsPsych.run([informed_consent, demography_study_field, demography_study_year, de
 </script>
 </body>
 </html>
+
 
 
 
