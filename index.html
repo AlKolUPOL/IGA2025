@@ -877,6 +877,8 @@ const connectTask = {
 };
 
 ///////////////////////////////////////////////////////////////// 3. úloha
+const colors = ['red', 'green', 'blue', 'orange', 'purple'];
+	
 const coloringTask = {
   type: jsPsychHtmlButtonResponse,
   choices: [],
@@ -1013,9 +1015,6 @@ const coloringTask = {
             });
             answerContainer.appendChild(btn);
         });
-
-    // DŮLEŽITÉ: Odebrán původní kód pro uložení dat (document.querySelector('#continue-btn .jspsych-btn').addEventListener('click', ...)
-    // Nyní to řeší funkce addLikertSection!
 
     // <<< PŘIDÁNÍ LIKERTOVY SEKCE A LOGIKY ULOŽENÍ DAT >>>
         // NOVÉ: Volání s includeStrategy = false (Task 3 má jen MK1 a MK2)
@@ -1690,6 +1689,7 @@ jsPsych.run([informed_consent, demography_study_field, demography_study_year, de
 </script>
 </body>
 </html>
+
 
 
 
