@@ -467,7 +467,11 @@ const demography_study_year = {
         const continueBtnYear = document.getElementById('continue-btn-year');
         
         // 1. Získání dat z předchozího trialu (Obor studia)
-        const allData = jsPsych.data.get().values();
+        jsPsych.data.addDataToLastTrial({
+    // Ukládáme data jen z daného trialu, netřeba volat allData
+    task_name: 'demography_year',
+    study_year: selectedYear 
+});
         // Spolehlivě najdeme data z trialu s task_name: 'demography'
         const previousTrialData = allData.findLast(d => d.task_name === 'demography');
         
@@ -1679,6 +1683,7 @@ jsPsych.run([informed_consent, demography_study_field, demography_study_year, de
 </script>
 </body>
 </html>
+
 
 
 
