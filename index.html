@@ -1527,108 +1527,135 @@ function saveDataToSheetDB() {
     });
 }
 
-// Funkce pro transformaci dat do požadovaného Wide Formatu
+/////////////////////////////////////////////////////////////////////////
+// Funkce pro transformaci dat do "širokého" formátu pro SheetDB/Google Sheets
 function processDataForWideFormat() {
+    // 1. Získání všech dat (jsPsych data)
     const allData = jsPsych.data.get().values();
-    const wideData = {};
 
-    // 1. Demografie & Globální data
-    const consentTrial = allData.find(d => d.task_name === 'informed_consent');
-    const fieldTrial = allData.find(d => d.task_name === 'demography');
-    const yearTrial = allData.find(d => d.task_name === 'demography_year');
-    const formTrial = allData.find(d => d.task_name === 'demography_form');
+    // 2. Extrahování a uspořádání klíčových proměnných
+    let wideData = {
+        // Generujeme unikátní ID pro uchování v JSONu, to bude i pro SheetDB
+        // Používáme standardní jsPsych subject id
+        // POZN.: Použijeme .values()[0].subject, pokud existuje.
+        subjectID: jsPsych.data.get().values()[0] ? jsPsych.data.get().values()[0].subject : 'N/A'
+    };
+
+    // 3. Demografické údaje
+    // ZMĚNA ZDE: Používáme .find() na celém poli dat místo řetězení select/filter/values
+    const demographyData = allData.find(d => d.task_name === 'demography');
+    const demographyYearData = allData.find(d => d.task_name === 'demography_year');
+    const demographyFormData = allData.find(d => d.task_name === 'demography_form');
     
-    wideData.student = subjectID;
-    wideData.date = new Date(consentTrial?.time_start).toISOString(); 
-    wideData.demography_field = fieldTrial?.study_field || 'N/A';
-    wideData.demography_year = yearTrial?.study_year || 'N/A';
-    wideData.demography_form = formTrial?.study_form || 'N/A';
+    if (demographyData) {
+        wideData.obor_studia = demographyData.study_field;
+    }
+    if (demographyYearData) {
+        wideData.rocnik_studia = demographyYearData.study_year;
+    }
+    if (demographyFormData) {
+        wideData.forma_studia = demographyFormData.study_form;
+    }
 
-    // 2. Mapování úkolů
-    const taskMap = [
-        { name: 'houseTask', prefix: 'task1', solutionKey: 'vertices' },
-        { name: 'connectTask', prefix: 'task2', solutionKey: 'created_edges' },
-        { name: 'coloringTask', prefix: 'task3', solutionKey: 'vertex_colors', answerKey: 'chosen_answer' },
-        { name: 'eulerTask', prefix: 'task4', solutionKey: 'blue_edges', specialKey: 'yellow_path_drawn' },
-        { name: 'pathfindingTask', prefix: 'task5', solutionKey: 'final_path' } 
+    // 4. Data z úloh a dotazníků (tasks 1, 2, 3, 4, 5)
+    const taskMappings = [
+        { task: 'houseTask', prefix: 'uloha1' },
+        { task: 'connectTask', prefix: 'uloha2' },
+        { task: 'coloringTask', prefix: 'uloha3' },
+        { task: 'eulerTask', prefix: 'uloha4' },
+        { task: 'pathfindingTask', prefix: 'uloha5' } // 'pathfindingTask' je v kódu pro hamiltonTask
     ];
-    
-    taskMap.forEach(task => {
-        const trial = allData.find(d => d.task_name === task.name);
-        
-        if (trial) {
-            // Čas a Reset
-            wideData[`${task.prefix}_time`] = trial.rt; 
-            wideData[`${task.prefix}_reset`] = trial.reset_count || 0;
+
+    taskMappings.forEach(mapping => {
+        // Hledání dat pro úkoly je nyní robustnější: Hledáme podle názvu úkolu (task_name)
+        let taskData = allData.find(d => d.task_name === mapping.task);
+
+        if (taskData) {
             
-            // MK1 & MK2
-            wideData[`${task.prefix}_MK1`] = trial.confidence || 'N/A';
-            wideData[`${task.prefix}_MK2`] = trial.familiarity || 'N/A';
+            // Likertovy škály (confidence, familiarity, strategy)
+            wideData[`${mapping.prefix}_confidence`] = taskData.confidence;
+            wideData[`${mapping.prefix}_familiarity`] = taskData.familiarity;
+            wideData[`${mapping.prefix}_strategy_code`] = taskData.strategy;
             
-            // Solution
-            if (task.name === 'houseTask' && Array.isArray(trial[task.solutionKey])) {
-                wideData[`${task.prefix}_solution`] = trial[task.solutionKey].map(v => `${v.id}:[${v.x},${v.y}]`).join(',');
-            } else if (task.name === 'connectTask' && Array.isArray(trial[task.solutionKey])) {
-                wideData[`${task.prefix}_solution`] = trial[task.solutionKey].map(e => `[${e.from},${e.to}]`).join(',');
-            } else if (task.name === 'coloringTask' && typeof trial[task.solutionKey] === 'object') {
-                wideData[`${task.prefix}_solution`] = Object.keys(trial[task.solutionKey]).map(id => `${id}:${trial[task.solutionKey][id]}`).join(',');
-            } else if (task.name === 'eulerTask' && Array.isArray(trial[task.solutionKey])) {
-                wideData[`${task.prefix}_solution`] = trial[task.solutionKey].map(e => `[${e.from},${e.to}]`).join(',');
-            } else if (task.name === 'pathfindingTask' && Array.isArray(trial[task.solutionKey])) {
-                 wideData[`${task.prefix}_solution`] = trial[task.solutionKey].map(e => `[${e.from},${e.to}]`).join(',');
-            } else {
-                 wideData[`${task.prefix}_solution`] = 'N/A - Empty';
+            // Specifická data k úlohám
+            if (mapping.task === 'houseTask') {
+                wideData[`${mapping.prefix}_vertices_positions`] = taskData.vertices ? JSON.stringify(taskData.vertices.map(v => ({id: v.id, x: v.x, y: v.y}))) : '[]';
+            } else if (mapping.task === 'connectTask') {
+                wideData[`${mapping.prefix}_created_edges`] = taskData.created_edges ? JSON.stringify(taskData.created_edges) : '[]';
+                wideData[`${mapping.prefix}_reset_count`] = taskData.reset_count; // Uloží reset pro úlohu 2
+            } else if (mapping.task === 'coloringTask') {
+                wideData[`${mapping.prefix}_vertex_colors`] = taskData.vertex_colors ? JSON.stringify(taskData.vertex_colors) : '{}';
+                wideData[`${mapping.prefix}_min_colors_answer`] = taskData.chosen_answer;
+            } else if (mapping.task === 'eulerTask') {
+                wideData[`${mapping.prefix}_added_edges`] = taskData.blue_edges ? JSON.stringify(taskData.blue_edges) : '[]';
+                wideData[`${mapping.prefix}_yellow_path_drawn`] = taskData.yellow_path_drawn; // task4_yellow (bool)
+            } else if (mapping.task === 'pathfindingTask') {
+                wideData[`${mapping.prefix}_final_path`] = taskData.final_path ? JSON.stringify(taskData.final_path) : '[]';
+                wideData[`${mapping.prefix}_reset_count`] = taskData.reset_count; // Uloží reset pro úlohu 5
             }
             
-            // Task 3 Answer
-            if (task.answerKey) {
-                wideData[`${task.prefix}_answer`] = trial[task.answerKey] || 'N/A';
-            }
+            // Přidáme RT a čas startu/konce
+            wideData[`${mapping.prefix}_rt`] = taskData.rt;
+            wideData[`${mapping.prefix}_time_elapsed`] = taskData.time_elapsed; 
             
-            // Task 4 Special Field
-            if (task.specialKey) {
-                 wideData[`${task.prefix}_yellow`] = trial[task.specialKey] ? 'Ano' : 'Ne';
-            }
-            
-            // MK3 (Strategy + Textarea for Tasks 1, 2, 4, 5)
-            if (task.name !== 'coloringTask') { // MK3 je požadováno všude kromě Task 3
-                const strategyValue = trial.strategy;
-                const strategyOther = trial.strategy_other;
-                wideData[`${task.prefix}_MK3`] = (strategyValue === 'jiny duvod' && strategyOther) 
-                    ? `jiny duvod: ${strategyOther}` : (strategyValue || 'N/A');
+            // Vložíme i text z textarea "Jiný důvod" (pokud je potřeba)
+            if (taskData.strategy_other_text) {
+                wideData[`${mapping.prefix}_strategy_other_text`] = taskData.strategy_other_text;
             }
         }
     });
 
+    // 5. Uložíme i kompletní JSON data pro zálohu
+    wideData.jspsych_raw_data = jsPsych.data.get().json();
+    
     return wideData;
 }
 
-// Funkce pro odeslání dat přes API (přidejte na konec souboru)
-function sendDataToSheetDB(data) {
-    // Vytvoříme objekt, který SheetDB očekává (zápis jednoho řádku)
+/////////////////////////////////////////////////////////////////////////
+// Funkce pro odeslání dat do SheetDB
+const SHEETDB_URL = 'https://sheetdb.io/api/v1/dknmz514rz0f5'; //
+
+function sendDataToSheetDB() { //
+    
+    // Zpracování dat probíhá uvnitř funkce
+    const dataToSend = processDataForWideFormat();
+    const subjectID = dataToSend.subjectID; // Získání ID pro chybové hlášky
+    
+    // Zobrazíme "uložení dat" před odesláním
+    document.querySelector('.jspsych-content').innerHTML = `
+        <div style="text-align: center; max-width: 600px; margin: 40px auto;">
+            <h2>Ukládám data...</h2>
+            <p>Prosím, čekejte, dokud se data neuloží.</p>
+        </div>
+    `;
+    
+    // Vytvoříme payload pro SheetDB
     const payload = {
-        data: [data]
+        data: [dataToSend] // Používáme dataToSend
     };
 
-    fetch(API_URL, {
+    fetch(SHEETDB_URL, {
         method: 'POST',
         headers: {
+            'Accept': 'application/json',
             'Content-Type': 'application/json',
         },
         body: JSON.stringify(payload)
     })
     .then(response => {
-        // Ponechat logiku pro zobrazení finální zprávy
-        if (response.ok) {
-             document.querySelector('.jspsych-content').innerHTML = `
-                <div style="text-align: center; max-width: 600px; margin: 40px auto;">
-                    <h2>Děkujeme!</h2>
-                    <p>Experiment byl dokončen a Vaše data byla úspěšně uložena (ID: ${subjectID}).</p>
+        // Kontrola, zda odpověď ze serveru naznačuje úspěch
+        if (response.ok || response.status === 201) {
+            // Úspěšné uložení
+            document.querySelector('.jspsych-content').innerHTML = `
+                <div style="text-align: center; max-width: 600px; margin: 40px auto; color: green;">
+                    <h2>Děkujeme – Experiment dokončen!</h2>
+                    <p>Vaše data byla úspěšně uložena (ID: ${subjectID}).</p>
                     <p>Můžete zavřít toto okno.</p>
                 </div>
             `;
             console.log('✅ Data byla úspěšně odeslána do Google Sheets (Wide Format).');
         } else {
+            // Chyba na straně serveru/SheetDB
              document.querySelector('.jspsych-content').innerHTML = `
                 <div style="text-align: center; max-width: 600px; margin: 40px auto; color: red;">
                     <h2>Děkujeme – Experiment dokončen, ale s chybou uložení!</h2>
@@ -1638,6 +1665,7 @@ function sendDataToSheetDB(data) {
         }
     })
     .catch(error => {
+        // Chyba sítě (např. problém s připojením)
          document.querySelector('.jspsych-content').innerHTML = `
             <div style="text-align: center; max-width: 600px; margin: 40px auto; color: red;">
                 <h2>Děkujeme – Experiment dokončen, ale s chybou uložení!</h2>
@@ -1647,10 +1675,18 @@ function sendDataToSheetDB(data) {
     });
 }
 	
-    jsPsych.run([informed_consent, demography_study_field, demography_study_year, demography_study_form, houseTask, connectTask, coloringTask, eulerTask, hamiltonTask]).then(saveDataToSheetDB); //Timeline - pořadí úloh
-  </script>
+jsPsych.run([informed_consent, demography_study_field, demography_study_year, demography_study_form, houseTask, connectTask, coloringTask, eulerTask, hamiltonTask], {
+    // on_finish je standardní JSPsych handler, který se spustí po dokončení experimentu
+    on_finish: function() {
+        // Voláme funkci BEZ jakýchkoliv argumentů
+        sendDataToSheetDB(); 
+    }
+});
+
+</script>
 </body>
 </html>
+
 
 
 
