@@ -854,6 +854,7 @@ const connectTask = {
     // --- PŘIDÁNÍ LIKERTOVY SEKCE A LOGIKY ULOŽENÍ DAT ---
     addLikertSection('connect-task-container', 'continue-btn-connect', (likertAnswers) => {
         jsPsych.data.addDataToLastTrial({
+			task_name: 'connectTask',
             created_edges: edges,
             ...likertAnswers
         });
@@ -1016,7 +1017,7 @@ const coloringTask = {
                 // strategy a strategy_other jsou automaticky null/nevyžadované
             });
             jsPsych.finishTrial();
-        }, false); // NEZAHRNUTÍ MK3
+        });
     }
 };
 
@@ -1676,6 +1677,7 @@ jsPsych.run([informed_consent, demography_study_field, demography_study_year, de
 </script>
 </body>
 </html>
+
 
 
 
