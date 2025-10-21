@@ -249,7 +249,6 @@ function addLikertSection(containerId, continueButtonId, onComplete, includeStra
           allAnswered = allAnswered && answers.strategy !== null;
           // Pokud je vybrána "Jiný důvod", zkontrolujeme i textové pole
           if (answers.strategy === 'jiny duvod' && otherTextarea) {
-             allAnswered = allAnswered && otherTextarea.value.trim() !== '';
           }
       }
 
@@ -1677,6 +1676,7 @@ jsPsych.run([informed_consent, demography_study_field, demography_study_year, de
 </script>
 </body>
 </html>
+
 
 
 
