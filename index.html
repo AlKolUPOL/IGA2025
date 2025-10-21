@@ -1524,15 +1524,12 @@ function processDataForWideFormat() {
     const allData = jsPsych.data.get().values();
 
     // 2. Extrahování a uspořádání klíčových proměnných
-    let wideData = {
-        // Generujeme unikátní ID pro uchování v JSONu, to bude i pro SheetDB
-        // Používáme standardní jsPsych subject id
-        // POZN.: Použijeme .values()[0].subject, pokud existuje.
-        subjectID: jsPsych.data.get().values()[0] ? jsPsych.data.get().values()[0].subject : 'N/A'
-    };
+    let wideData = {};
+	const allData = jsPsych.data.get().values();
+	const subjectID = allData[0] ? allData[0].subjectID : 'N/A';
+	wideData.subjectID = subjectID;
 
     // 3. Demografické údaje
-    // ZMĚNA ZDE: Používáme .find() na celém poli dat místo řetězení select/filter/values
     const demographyData = allData.find(d => d.task_name === 'demography');
     const demographyYearData = allData.find(d => d.task_name === 'demography_year');
     const demographyFormData = allData.find(d => d.task_name === 'demography_form');
@@ -1680,6 +1677,7 @@ jsPsych.run([informed_consent, demography_study_field, demography_study_year, de
 </script>
 </body>
 </html>
+
 
 
 
