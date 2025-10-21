@@ -753,7 +753,7 @@ const demography_study_form = {
 //////////////////////////////////////////////////////////////////// 2. úloha
 const connectTask = {
   type: jsPsychHtmlButtonResponse,
-  choices: [], 
+  choices: [], // Změna: Odebráno defaultní tlačítko
   stimulus: () => {
     return `
       <div id="connect-task-container">
@@ -764,16 +764,17 @@ const connectTask = {
           <svg id="connect-graph" viewBox="0 0 480 360" preserveAspectRatio="xMidYMid meet" aria-label="Spojování vrcholů">
           </svg>
     	<div class="ui">
+            <button type="button" id="reset-btn">Resetovat úlohu</button>
             <span class="note">Klikněte na dva body pro spojení/odpojení.</span>
-  			</div>
+  	</div>
         </div>
       </div>
     `;
   },
   on_load: () => {
-        const svg = document.getElementById('connect-graph');
-        const svgNS = "http://www.w3.org/2000/svg";
-	  
+    const svg = document.getElementById('connect-graph');
+    const svgNS = "http://www.w3.org/2000/svg";
+
     const nodes = [
       {id: 1, label: "2", x: 120, y: 60},
       {id: 2, label: "4", x: 240, y: 60},
@@ -832,7 +833,7 @@ const connectTask = {
               }
             }
             selectedNode = null;
-          }			
+          }
           drawGraph();
         });
 
@@ -846,24 +847,19 @@ const connectTask = {
         svg.appendChild(circle);
         svg.appendChild(text);
       });
-    }  
-	  
+    }
+
     drawGraph();
 
     // --- PŘIDÁNÍ LIKERTOVY SEKCE A LOGIKY ULOŽENÍ DAT ---
-        addLikertSection('connect-task-container', 'continue-btn-connect', (likertAnswers) => {
-            jsPsych.data.addDataToLastTrial({
-                task_name: 'connectTask',
-                created_edges: edges, // task2_solution
-                ...likertAnswers // MK1, MK2, strategy, strategy_other
-            });
-			const container = document.getElementById('connect-task-container');
-            if (container) {
-                container.remove();
-            }
-            jsPsych.finishTrial();
+    addLikertSection('connect-task-container', 'continue-btn-connect', (likertAnswers) => {
+        jsPsych.data.addDataToLastTrial({
+            created_edges: edges,
+            ...likertAnswers
         });
-    }
+        jsPsych.finishTrial();
+    });
+  }
 };
 
 	
@@ -1679,6 +1675,7 @@ jsPsych.run([informed_consent, demography_study_field, demography_study_year, de
 </script>
 </body>
 </html>
+
 
 
 
