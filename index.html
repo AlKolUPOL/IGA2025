@@ -75,7 +75,7 @@
 
 // Globální proměnná pro unikátní ID studenta a definice API
 let subjectID = 'Student ' + (1000 + Math.floor(Math.random() * 900)).toString().substring(1);
-const API_URL = 'https://sheetdb.io/api/v1/VLOZTE_SEM_VAS_API_ENDPOINT'; // ZDE VLOŽTE VÁŠ SKUTEČNÝ API ENDPOINT
+const API_URL = 'https://sheetdb.io/api/v1/dknmz514rz0f5';
 
 function initializeStrategyButtons(answers, checkCompletion) {
     const strategyButtons = document.querySelectorAll('.strategy-btn');
@@ -1639,7 +1639,7 @@ function sendDataToSheetDB() { //
             document.querySelector('.jspsych-content').innerHTML = `
                 <div style="text-align: center; max-width: 600px; margin: 40px auto; color: green;">
                     <h2>Děkujeme – Experiment dokončen!</h2>
-                    <p>Vaše data byla úspěšně uložena (ID: ${subjectID}).</p>
+                    <p>Vaše data byla úspěšně uložena.</p>
                     <p>Můžete zavřít toto okno.</p>
                 </div>
             `;
@@ -1649,7 +1649,7 @@ function sendDataToSheetDB() { //
              document.querySelector('.jspsych-content').innerHTML = `
                 <div style="text-align: center; max-width: 600px; margin: 40px auto; color: red;">
                     <h2>Děkujeme – Experiment dokončen, ale s chybou uložení!</h2>
-                    <p>Došlo k chybě při ukládání dat (Chyba serveru). ID: ${subjectID}. Prosím, kontaktujte experimentátora.</p>
+                    <p>Došlo k chybě při ukládání dat (Chyba serveru). Prosím, kontaktujte experimentátora.</p>
                 </div>
             `;
         }
@@ -1659,7 +1659,7 @@ function sendDataToSheetDB() { //
          document.querySelector('.jspsych-content').innerHTML = `
             <div style="text-align: center; max-width: 600px; margin: 40px auto; color: red;">
                 <h2>Děkujeme – Experiment dokončen, ale s chybou uložení!</h2>
-                <p>Došlo k chybě při ukládání dat (Chyba sítě). ID: ${subjectID}. Prosím, kontaktujte experimentátora.</p>
+                <p>Došlo k chybě při ukládání dat (Chyba sítě). Prosím, kontaktujte experimentátora.</p>
             </div>
         `;
     });
@@ -1680,6 +1680,7 @@ jsPsych.run([informed_consent, demography_study_field, demography_study_year, de
 </script>
 </body>
 </html>
+
 
 
 
