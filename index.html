@@ -462,15 +462,20 @@ const demography_study_year = {
         `;
     },
     on_load: () => {
+		let allData = jsPsych.data.get().values();
         const containerYear = document.getElementById('study-year-container');
-        // OPRAVA CHYBY: Přejmenování proměnné na 'continueBtnYear'
         const continueBtnYear = document.getElementById('continue-btn-year');
+
+		jsPsych.data.addDataToLastTrial({
+        task_name: 'demography_year',
+        study_year: selectedYear 
+    });
         
-// Data z předchozího trialu získáme přímo voláním jsPsych.data.get()
-const previousTrialData = jsPsych.data.get().findLast({task_name: 'demography'}).values[0];
+		// Spolehlivě najdeme data z trialu s task_name: 'demography'
+        const previousTrialData = allData.findLast(d => d.task_name === 'demography');
         
-// Získáme vybraný obor (předpokládá se, že je uložen pod 'study_field')
-const studyField = previousTrialData ? previousTrialData.study_field : null;
+        // Získáme vybraný obor (předpokládá se, že je uložen pod 'study_field')
+        const studyField = previousTrialData ? previousTrialData.study_field : null;
 		
         // 2. Definování možností odpovědí podle větve (UMAT vs. Ostatní)
         let optionsHtml = '';
@@ -1677,6 +1682,7 @@ jsPsych.run([informed_consent, demography_study_field, demography_study_year, de
 </script>
 </body>
 </html>
+
 
 
 
