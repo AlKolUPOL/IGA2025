@@ -466,18 +466,12 @@ const demography_study_year = {
         // OPRAVA CHYBY: Přejmenování proměnné na 'continueBtnYear'
         const continueBtnYear = document.getElementById('continue-btn-year');
         
-        // 1. Získání dat z předchozího trialu (Obor studia)
-        jsPsych.data.addDataToLastTrial({
-    // Ukládáme data jen z daného trialu, netřeba volat allData
-    task_name: 'demography_year',
-
-});
-        // Spolehlivě najdeme data z trialu s task_name: 'demography'
-        const previousTrialData = allData.findLast(d => d.task_name === 'demography');
+// Data z předchozího trialu získáme přímo voláním jsPsych.data.get()
+const previousTrialData = jsPsych.data.get().findLast({task_name: 'demography'}).values[0];
         
-        // Získáme vybraný obor (předpokládá se, že je uložen pod 'study_field')
-        const studyField = previousTrialData ? previousTrialData.study_field : null; 
-
+// Získáme vybraný obor (předpokládá se, že je uložen pod 'study_field')
+const studyField = previousTrialData ? previousTrialData.study_field : null;
+		
         // 2. Definování možností odpovědí podle větve (UMAT vs. Ostatní)
         let optionsHtml = '';
         let choices = [];
@@ -1683,6 +1677,7 @@ jsPsych.run([informed_consent, demography_study_field, demography_study_year, de
 </script>
 </body>
 </html>
+
 
 
 
