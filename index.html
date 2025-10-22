@@ -146,7 +146,6 @@ function addLikertSection(containerId, continueButtonId, onComplete, includeStra
                         <button class="strategy-btn" data-value="nezmenena">Neměnil/a jsem postup.</button>
                         <button class="strategy-btn" data-value="neefektivni">Můj původní postup se ukázal jako neefektivní.</button>
                         <button class="strategy-btn" data-value="proti zadani">Můj původní postup neodpovídal zadání.</button>
-                        <button class="strategy-btn" data-value="efektivnejsi">Objevil/a jsem efektivnější postup.</button>
                         <button class="strategy-btn" data-value="slepe misto">Nevěděl/a jsem, jak pokračovat s původním postupem, tak jsem zkusil/a jiný.</button>
                         <button class="strategy-btn" data-value="jiny duvod">Jiný důvod:</button>
                         <textarea id="text-other" placeholder="Prosím popište" style="width: 80%; display: block; margin-left: 25px;"></textarea>
@@ -334,12 +333,13 @@ const informed_consent = {
         return `
             <div id="informed-consent-container" class="prompt">
                 <h2>IGA 2025 Dotazník</h2>
-                <p>Děkujeme Vám za účast ve výzkumu. Přečtěte si prosím pozorně následující informace o výzkumu:</p>
+                <p>Děkujeme Vám za účast ve výzkumu. Přečtěte si prosím pozorně následující informace.</p>
                 
-                    Vaše účast ve výzkumu je zcela dobrovolná.
-                    Data budou anonymizována a použita výhradně pro vědecké účely.
-                    
-                    Svou účast můžete kdykoliv bez udání důvodu ukončit.
+                 <ul>
+        			<li>Vaše účast ve výzkumu je zcela dobrovolná.</li>
+        			<li>Data budou anonymizována a použita výhradně pro vědecké účely.</li>
+       				 <li>Svou účast můžete kdykoliv bez udání důvodu ukončit.</li>
+   				 </ul>
               
                 <p><strong>Stisknutím tlačítka „Souhlasím a pokračovat“ potvrzujete, že jste si tyto informace přečetli/a a souhlasíte s účastí.</strong></p>
                 
@@ -624,7 +624,7 @@ const demography_study_form = {
             <div id="graphbox">
               <div class="prompt">
     		<p><strong>1. Úloha</strong></p> 
-                <p><strong>Zadání:</strong> Přesuň body tak, aby se čáry nekřížily.</p>
+                <p><strong>Zadání:</strong> Přesuňte body tak, aby se čáry nekřížily ani nepřekrývaly.</p>
               </div>
               <svg id="graph" viewBox="0 0 480 360" preserveAspectRatio="xMidYMid meet" aria-label="Domeček – graf">
                 ${edges.map(([u,v], i) => `<line class="edge" data-u="${u}" data-v="${v}" id="edge-${i}" x1="0" y1="0" x2="0" y2="0"></line>`).join('')}
@@ -1027,7 +1027,7 @@ const eulerTask = {
   stimulus: () => {
     return `
       <div id="euler-task-container"> <div class="prompt">
-          <p><strong>4. úloha:</strong> Přidejte 1 čáru tak, aby bylo možné obrázek nakreslit jedním tahem.</p>
+          <p><strong>4. úloha:</strong> Přidejte jednu čáru tak, aby bylo možné obrázek nakreslit jedním tahem.</p>
         </div>
         <div style="margin-bottom:10px; display:flex; gap:10px; justify-content:center;">
           <button type="button" id="mode-blue" style="background:#4C8CFF; color:white;">Vytvořit nové čáry</button>
@@ -1679,6 +1679,7 @@ jsPsych.run([informed_consent, demography_study_field, demography_study_year, de
 </script>
 </body>
 </html>
+
 
 
 
