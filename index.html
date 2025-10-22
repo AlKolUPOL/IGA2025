@@ -465,14 +465,11 @@ const demography_study_year = {
 		let allData = jsPsych.data.get().values();
         const containerYear = document.getElementById('study-year-container');
         const continueBtnYear = document.getElementById('continue-btn-year');
-
-		jsPsych.data.addDataToLastTrial({
-        task_name: 'demography_year',
-        study_year: selectedYear 
-    });
         
-		// Spolehlivě najdeme data z trialu s task_name: 'demography'
-        const previousTrialData = allData.findLast(d => d.task_name === 'demography');
+		// Spolehlivě najdeme data z trialu s task_name: 'demography'.
+        // OPRAVA: Použití filter a získání posledního prvku místo findLast pro kompatibilitu (řeší TypeError).
+        const matchingTrials = allData.filter(d => d.task_name === 'demography');
+        const previousTrialData = matchingTrials.length > 0 ? matchingTrials[matchingTrials.length - 1] : null;
         
         // Získáme vybraný obor (předpokládá se, že je uložen pod 'study_field')
         const studyField = previousTrialData ? previousTrialData.study_field : null;
@@ -1682,6 +1679,7 @@ jsPsych.run([informed_consent, demography_study_field, demography_study_year, de
 </script>
 </body>
 </html>
+
 
 
 
